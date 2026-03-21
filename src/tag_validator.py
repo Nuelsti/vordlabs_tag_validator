@@ -33,8 +33,8 @@ for tag, count in duplicates.items():
     print(f"VALVE TAG '{tag}': {count} occurrences")
 
 # save the duplicates to a new Excel file (path resolved relative to this script)
-# output_dir = script_dir.parent / "output"
-# output_dir.mkdir(parents=True, exist_ok=True)
-# output_path = output_dir / "duplicate_valve_tag.xlsx"
-# duplicates.to_excel(output_path, index=True)
-# print(f"\nDuplicate VALVE TAGs have been saved to '{output_path}'")
+output_dir = script_dir.parent / "output"
+output_dir.mkdir(parents=True, exist_ok=True)
+output_path = output_dir / "duplicate_valve_tag.xlsx"
+duplicates.to_excel(output_path, index=True)
+print(f"\nDuplicate VALVE TAGs have been saved to '{output_path}'")
