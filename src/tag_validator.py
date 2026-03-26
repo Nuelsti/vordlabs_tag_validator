@@ -17,13 +17,39 @@ df = pd.read_excel(file_path)
 
 df['VALVE TAG'] = df['VALVE TAG'].astype(str).str.strip()
 
+# PREFIX EXTRACTION
+# Splitting the first part of the tag name
+df['Prefix'] = df['VALVE TAG'].str.split("-").str[0]
+
 #Detect duplicates in the 'VALVE TAG' column
 
 duplicate_counts = df['VALVE TAG'].value_counts()
 duplicates = duplicate_counts[duplicate_counts > 1]
 
+#  count common prefix
+common_prefix = df['Prefix'].mode()[0] if not df['Prefix'].mode().empty else None
+print(f"Most common prefix: {common_prefix}") 
+
+# inconsistent prefix detection
+inconsistent_prefixes = df[df['Prefix'] != common_prefix]
+inconsistent_prefixes = inconsistent_prefixes['Prefix'].value_counts()
+print("\nInconsistent prefixes:")
+if not inconsistent_prefixes.empty:
+    for prefix, count in inconsistent_prefixes.items():
+        print(f"Prefix '{prefix}': {count} occurrences")
+else:    print("No inconsistent prefixes found.")
+
+# NUMBERING EXTRACTION
+# splittin the second part
+df['Number'] = df['VALVE TAG'].str.split("-").str[1]
+
+# convert to number
+df['Number'] = pd.to_numeric(df['Number'], errors='coerce')
+
+
 # Format validation
 pattern = r'^[A-Z]{2,3}-\d{3}$'
+
 
 invalid_format = []
 
