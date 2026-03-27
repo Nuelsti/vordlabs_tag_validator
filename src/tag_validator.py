@@ -44,9 +44,56 @@ else:    print("No inconsistent prefixes found.")
 df['Number'] = df['VALVE TAG'].str.split("-").str[1]
 
 # convert to number
+# df['Number'] = pd.to_numeric(df['Number'],errors='coerce')
 df['Number'] = pd.to_numeric(df['Number'], errors='coerce')
 
+# removing invalid entries
+valid_numbers = df.dropna(subset=['Number'])
+valid_numbers['Number'] = valid_numbers['Number'].astype(int)
 
+# grouping each number by prefix and checking for missing numbers in the sequence
+groups = valid_numbers.groupby('Prefix')
+
+# optional: print to show groups by prefix and their numbers
+print("\nGroups by prefix:")
+for prefix, group in groups:
+    print(f"Prefix '{prefix}': Numbers {group['Number'].tolist()}")
+print("\nChecking for missing numbers in sequence by prefix...")
+
+
+missing_report = {}
+
+for prefix, group in groups:
+    numbers = group['Number'].sort_values()
+    
+    # testing
+    # for num in numbers:        print(f"Checking prefix '{prefix}': Number {num}")
+    # testing
+    # for prefix_one, group_one in numbers.groupby('Prefix'):
+    #     print(f"Testing prefix '{prefix_one}': Numbers {group_one.tolist()}")
+    
+    missing = []
+    
+    for i in range(len(numbers) - 1):
+        current = numbers.iloc[i]
+        next_num = numbers.iloc[i + 1]
+        
+        if next_num != current + 1:
+            missing.extend(range(current + 1, next_num))
+        else:                continue
+
+    if missing:
+        missing_report[prefix] = missing
+    else:        continue
+        
+# print result   print("No missing numbers in sequence found.")
+print("\nMissing numbers in sequence by prefix:")
+if missing_report:
+    for prefix, missing in missing_report.items():
+        print(f"Prefix '{prefix}': Missing numbers {missing}")
+else:    print("No missing numbers in sequence found.")
+
+    
 # Format validation
 pattern = r'^[A-Z]{2,3}-\d{3}$'
 
@@ -80,10 +127,40 @@ else:    print("All VALVE TAGs match the required format.")
 
 
 # save the duplicates to a new Excel file (path resolved relative to this script)
-output_dir = script_dir.parent / "output"
-output_dir.mkdir(parents=True, exist_ok=True)
-output_path = output_dir / "invalid_format_report.xlsx"
-duplicates.to_excel(output_path, index=True)
-pd.DataFrame(invalid_format, columns=['Invalid VALVE TAGs']).to_excel(output_path, index=False, startrow=len(duplicates) + 2)
-# Append invalid format tags below duplicates
-print(f"\nInvalid Format VALVE TAGs have been saved to '{output_path}'")
+# output_dir = script_dir.parent / "output"
+# output_dir.mkdir(parents=True, exist_ok=True)
+# output_path = output_dir / "invalid_format_report.xlsx"
+# duplicates.to_excel(output_path, index=True)
+# pd.DataFrame(invalid_format, columns=['Invalid VALVE TAGs']).to_excel(output_path, index=False, startrow=len(duplicates) + 2)
+# # Append invalid format tags below duplicates
+# print(f"\nInvalid Format VALVE TAGs have been saved to '{output_path}'")
+
+
+# CREATING A JSON file report
+report = {
+    "total_tags": len(df),
+    "duplicates": len(duplicates),
+    "invalid_format": len(invalid_format),
+    "inconsistent_prefix": len(inconsistent_prefixes),
+    "missing_numbers": sum(len(v) for v in missing_report.values())
+}
+
+print("\n=== SUMMARY ===")
+# using for loop to iterate through the report dictionary and print each key-value pair
+for key, value in report.items():
+    print(f"{key.replace('_', ' ').title()}: {value}")
+
+# combine detailed result
+detailed_report = {
+    "duplicates": duplicates.to_dict(),
+    "invalid_format": invalid_format,
+    "inconsistent_prefixes": inconsistent_prefixes.to_dict(),
+    "missing_numbers": missing_report
+}
+# save as JSON file
+import json
+output_json_path = script_dir.parent / "output" / "tag_validation_report.json"
+with open(output_json_path, 'w') as json_file:
+    json.dump(detailed_report, json_file, indent=4)
+print(f"\nDetailed report has been saved to '{output_json_path}'")
+
