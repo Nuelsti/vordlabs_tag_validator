@@ -48,25 +48,58 @@ if st.button("Run Validator"):
             st.table(pd.DataFrame([result["summary"]]))
 
             st.markdown("### Details")
-            if result["details"].get("duplicates"):
-                st.write("**Duplicates:**")
-                for tag, count in result["details"]["duplicates"].items():
-                    st.write(f"- {tag}: {count} occurrences")
+            
+            st.subheader("Duplicate Tags")
 
-            if result["details"].get("invalid_format_tags"):
-                st.write("**Invalid Format Tags:**")
-                for tag in result["details"]["invalid_format_tags"]:
-                    st.write(f"- {tag}")
+            duplicates = result["details"]["duplicates"]
 
-            if result["details"].get("inconsistent_prefixes"):
-                st.write("**Inconsistent Prefixes:**")
-                for prefix, count in result["details"]["inconsistent_prefixes"].items():
-                    st.write(f"- {prefix}: {count} occurrences")
+            if duplicates:
+                dup_df = pd.DataFrame(list(duplicates.items()), columns=["Tag", "Count"])
+                st.dataframe(dup_df)
+            else:
+                st.write("No duplicates found")
 
-            if result["details"].get("missing_numbers"):
-                st.write("**Missing Numbers:**")
-                for prefix, numbers in result["details"]["missing_numbers"].items():
-                    st.write(f"- {prefix}: missing {numbers}")
+            st.subheader("Invalid Format Tags")
+
+            invalid_formats = result["details"]["invalid_format_tags"]
+
+            if invalid_formats:
+                st.dataframe(pd.DataFrame(invalid_formats, columns=["Invalid Tags"]))
+            else:
+                st.write("None")
+           
+            # st.subheader("Inconsistent Prefixes")
+
+            # invalid_prefix = result["details"]["inconsistent_prefixes"]
+
+            # if invalid_prefix:
+            #     st.dataframe(pd.DataFrame(invalid_prefix, columns=["Tags"]))
+            # else:
+            #     st.write("None")
+                
+            
+            st.subheader("Missing Numbers")
+
+            missing = result["details"]["missing_numbers"]
+
+            if missing:
+                for prefix, nums in missing.items():
+                    st.dataframe(pd.DataFrame(nums, columns=[f"Missing Numbers for {prefix}"]))
+                    # st.write(f"{prefix}: {nums}")
+            else:
+                st.write("No missing numbers")
+            
+            
+            st.subheader("Inconsistent Prefix Counts")
+            inconsistent_prefixes = result["details"]["inconsistent_prefixes"]
+            if inconsistent_prefixes:
+                prefix_counts = pd.DataFrame(list(inconsistent_prefixes.items()), columns=["Prefix", "Count"])
+                st.dataframe(prefix_counts)
+            else:
+                st.write("No inconsistent prefixes found")
+
+            
+            st.success("Validation Completed Successfully!")
 
         else:
             st.warning("Unexpected result format. See raw JSON below.")
